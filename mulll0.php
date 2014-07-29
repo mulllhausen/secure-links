@@ -11,7 +11,7 @@ Author URI: https://github.com/mulllhausen
 
 //chose a new private key. must be at least 20 characters long and contain
 //at least 1 number, 1 symbol and 1 capital letter
-define("MULLL0_PRIVATE_KEY", "please change this");
+define("mulll0_private_key", "please change this");
 
 //plugin globals
 $uploads_dir = wp_upload_dir();
@@ -83,14 +83,14 @@ function mulll0_security_checks() {
 
 	//check that the private key has been securely modified
 	$pk_warnings = array();
-	if(MULLL0_PRIVATE_KEY == "please change this") $pk_warnings[] = "it has not been changed from its default value";
-	if(strlen(MULLL0_PRIVATE_KEY) < 20) $pk_warnings[] = "it is less than 20 characters";
+	if(mulll0_private_key == "please change this") $pk_warnings[] = "it has not been changed from its default value";
+	if(strlen(mulll0_private_key) < 20) $pk_warnings[] = "it is less than 20 characters";
 	$symbols = "!@#$%^&*()~{};',\.";
-	if(!preg_match("/[$symbols]/", MULLL0_PRIVATE_KEY)) $pk_warnings[] = "it does not contain any of the following symbols: $symbols";
-	if(!preg_match("/[A-Z]/", MULLL0_PRIVATE_KEY)) $pk_warnings[] = "it does not contain any capital letters";
-	if(!preg_match("/[0-9]/", MULLL0_PRIVATE_KEY)) $pk_warnings[] = "it does not contain any numbers";
+	if(!preg_match("/[$symbols]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any of the following symbols: $symbols";
+	if(!preg_match("/[A-Z]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any capital letters";
+	if(!preg_match("/[0-9]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any numbers";
 	if(count($pk_warnings)) {
-		$warnings[] = "$cross the private key has the following errors: <ul class="mulll0-list"><li>".implode("</li><li>", $pk_warnings)."</li></ul>";
+		$warnings[] = "$cross the private key has the following errors: <ul class='mulll0-list'><li>".implode("</li><li>", $pk_warnings)."</li></ul>";
 		$status = false;
 	} else $warnings[] = "$tick the private key has been securely updated";
 
@@ -157,7 +157,7 @@ function mulll0_do_file_transfer($uid_and_file_str) {
 	readfile($file);
 };
 function mulll0_encrypt($plaintext) {
-	$key = pack("H*", hash("sha256", MULLL0_PRIVATE_KEY));
+	$key = pack("H*", hash("sha256", mulll0_private_key));
 	$key_size = strlen($key);
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
@@ -169,7 +169,7 @@ function mulll0_decrypt($ciphertext) {
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv_dec = substr($ciphertext_dec, 0, $iv_size);
 	$ciphertext_dec = substr($ciphertext_dec, $iv_size);
-	$key = pack("H*", hash("sha256", MULLL0_PRIVATE_KEY));
+	$key = pack("H*", hash("sha256", mulll0_private_key));
 	return mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $ciphertext_dec, MCRYPT_MODE_CBC, $iv_dec);
 };
 function mulll0_alert($string) {
