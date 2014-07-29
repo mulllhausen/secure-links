@@ -14,7 +14,12 @@ Author URI: https://github.com/mulllhausen
 define("mulll0_private_key", "please change this");
 
 $uploads_dir = wp_upload_dir();
-$restricted_dir = trailingslashit($uploads_dir["path"])."restricted/";
+
+function mulll0_include_css() {
+	wp_register_style("mulll0_css", plugins_url("css/mulll0.css", __FILE__));
+	wp_enqueue_style("mulll0_css");
+};
+add_action("admin_enqueue_scripts", "mulll0_include_css");
 
 function mulll0_include_js() {
 	//include the javascript file for this plugin
@@ -131,7 +136,8 @@ function mulll0_downloads_gatekeeper($uid_and_file_str) {
 	return array(true, null);
 };
 function mulll0_full_download_filename($basename) {
-	return ABSPATH."wp-content/uploads/restricted/".$basename;
+	global $uploads_dir;
+	return trailingslashit($uploads_dir["path"])."restricted/$basename";
 };
 function mulll0_do_file_transfer($uid_and_file_str) {
 	$uid_and_file_arr = explode("|", $uid_and_file_str);
@@ -149,7 +155,7 @@ function mulll0_do_file_transfer($uid_and_file_str) {
 	readfile($file);
 };
 function mulll0_encrypt($plaintext) {
-	$key = pack("H*", hash("sha256", LINK_KEY));
+	$key = pack("H*", hash("sha256", mulll0_private_key));
 	$key_size = strlen($key);
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
@@ -161,7 +167,7 @@ function mulll0_decrypt($ciphertext) {
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv_dec = substr($ciphertext_dec, 0, $iv_size);
 	$ciphertext_dec = substr($ciphertext_dec, $iv_size);
-	$key = pack("H*", hash("sha256", LINK_KEY));
+	$key = pack("H*", hash("sha256", mulll0_private_key));
 	return mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $ciphertext_dec, MCRYPT_MODE_CBC, $iv_dec);
 };
 function mulll0_alert($string) {
@@ -171,5 +177,4 @@ function mulll0_alert($string) {
 function mulll0_go_back($message) {
 	die("<script>".mulll0_alert($message)." history.go(-1);</script>");
 };
-
 ?>
