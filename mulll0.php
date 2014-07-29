@@ -11,8 +11,9 @@ Author URI: https://github.com/mulllhausen
 
 //chose a new private key. must be at least 20 characters long and contain
 //at least 1 number, 1 symbol and 1 capital letter
-define("mulll0_private_key", "please change this");
+define("MULLL0_PRIVATE_KEY", "please change this");
 
+//plugin globals
 $uploads_dir = wp_upload_dir();
 
 function mulll0_include_css() {
@@ -41,12 +42,13 @@ function mulll0_add_admin() {
 		"mulllhausen's secure links",
 		"mulll secure links",
 		"edit_users",
-		"mulll0", "mulll0_load_admin_page");
+		"mulll0",
+		"mulll0_load_admin_page");
 };
 add_action("admin_menu", "mulll0_add_admin");
 
 function mulll0_load_admin_page() {
-	list($status, $warnings) = mulll0_run_security_checks();
+	list($status, $warnings) = mulll0_security_checks();
 	?>
 <h2><?php echo __("mulllhausen's secure links - admin panel", "mulll0_tr"); ?></h2>
 <h3>security checks</h3>
@@ -59,7 +61,7 @@ function mulll0_load_admin_page() {
 <p>todo</p>
 	<?php
 };
-function mulll0_run_security_checks() {
+function mulll0_security_checks() {
 	$tick = "<img alt='tick' src='".plugins_url("images/tick.png", __FILE__)."' />";
 	$cross = "<img alt='cross' src='".plugins_url("images/cross.png", __FILE__)."' />";
 	$warnings = array(); //init
@@ -81,12 +83,12 @@ function mulll0_run_security_checks() {
 
 	//check that the private key has been securely modified
 	$pk_warnings = array();
-	if(mulll0_private_key == "please change this") $pk_warnings[] = "it has not been changed from its default value";
-	if(strlen(mulll0_private_key) < 20) $pk_warnings[] = "it is less than 20 characters";
+	if(MULLL0_PRIVATE_KEY == "please change this") $pk_warnings[] = "it has not been changed from its default value";
+	if(strlen(MULLL0_PRIVATE_KEY) < 20) $pk_warnings[] = "it is less than 20 characters";
 	$symbols = "!@#$%^&*()~{};',\.";
-	if(!preg_match("/[$symbols]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any of the following symbols: $symbols";
-	if(!preg_match("/[A-Z]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any capital letters";
-	if(!preg_match("/[0-9]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any numbers";
+	if(!preg_match("/[$symbols]/", MULLL0_PRIVATE_KEY)) $pk_warnings[] = "it does not contain any of the following symbols: $symbols";
+	if(!preg_match("/[A-Z]/", MULLL0_PRIVATE_KEY)) $pk_warnings[] = "it does not contain any capital letters";
+	if(!preg_match("/[0-9]/", MULLL0_PRIVATE_KEY)) $pk_warnings[] = "it does not contain any numbers";
 	if(count($pk_warnings)) {
 		$warnings[] = "$cross the private key has the following errors: <ul class="mulll0-list"><li>".implode("</li><li>", $pk_warnings)."</li></ul>";
 		$status = false;
@@ -98,7 +100,6 @@ function mulll0_run_security_checks() {
 
 	return array($status, $warnings);
 };
-add_shortcode('mulll0', 'mulll0_encrypt_download_link');
 function mulll0_encrypt_download_link($shortcode_attrs, $basename = null) {
 	global $current_user;
 
@@ -122,6 +123,7 @@ function mulll0_encrypt_download_link($shortcode_attrs, $basename = null) {
 
 	return "<a href='$url'>$basename</a>";
 };
+add_shortcode('mulll0', 'mulll0_encrypt_download_link');
 function mulll0_downloads_gatekeeper($uid_and_file_str) {
 	global $current_user;
 	$uid_and_file_arr = explode("|", $uid_and_file_str);
@@ -155,7 +157,7 @@ function mulll0_do_file_transfer($uid_and_file_str) {
 	readfile($file);
 };
 function mulll0_encrypt($plaintext) {
-	$key = pack("H*", hash("sha256", mulll0_private_key));
+	$key = pack("H*", hash("sha256", MULLL0_PRIVATE_KEY));
 	$key_size = strlen($key);
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
@@ -167,7 +169,7 @@ function mulll0_decrypt($ciphertext) {
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv_dec = substr($ciphertext_dec, 0, $iv_size);
 	$ciphertext_dec = substr($ciphertext_dec, $iv_size);
-	$key = pack("H*", hash("sha256", mulll0_private_key));
+	$key = pack("H*", hash("sha256", MULLL0_PRIVATE_KEY));
 	return mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $ciphertext_dec, MCRYPT_MODE_CBC, $iv_dec);
 };
 function mulll0_alert($string) {
