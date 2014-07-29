@@ -9,9 +9,13 @@ Version: 1.0
 Author URI: https://github.com/mulllhausen
 */
 
+//exit if accessed directly
+if(!defined('ABSPATH')) exit;
+
 //chose a new private key. must be at least 20 characters long and contain
 //at least 1 number, 1 symbol and 1 capital letter
-define("mulll0_private_key", "please change this");
+//define("mulll0_private_key", "please change this");
+define("mulll0_private_key", "please change thisDFG345$%^");
 
 //plugin globals
 $uploads_dir = wp_upload_dir();
@@ -24,12 +28,13 @@ add_action("admin_enqueue_scripts", "mulll0_include_css");
 
 function mulll0_include_js() {
 	//include the javascript file for this plugin
+	$handle = "mulll0-js";
+	wp_register_script($handle, plugins_url("js/mulll0.js", __FILE__));
 	global $uploads_dir;
-	$handle = "mulll0_js";
-	wp_register_script($handle, plugins_url("/js/mulll0.js", __FILE__));
 	$triangulation_data = array(
-		"restricted_dir" => trailingslashit($uploads_dir["url"])."restricted/",
-		"plugin_dir" => trailingslashit(plugins_url("", __FILE__))
+		"restricted_url" => trailingslashit($uploads_dir["url"])."restricted/",
+		"plugin_url" => trailingslashit(plugins_url("", __FILE__)),
+		"test_file_exists" => file_exists(trailingslashit($uploads_dir["path"])."restricted/mulll0_test.txt") ? true : false
 	);
 	wp_localize_script($handle, "mulll0_data", $triangulation_data);
 	wp_enqueue_script($handle);
@@ -37,67 +42,91 @@ function mulll0_include_js() {
 add_action("admin_enqueue_scripts", "mulll0_include_js");
 
 function mulll0_add_admin() {
-	add_submenu_page(
-		"tools.php",
-		"mulllhausen's secure links",
-		"mulll secure links",
-		"edit_users",
-		"mulll0",
-		"mulll0_load_admin_page");
+	add_submenu_page("tools.php", "mulllhausen's secure links", "mulll secure links", "edit_users", "mulll0", "mulll0_load_admin_page");
 };
 add_action("admin_menu", "mulll0_add_admin");
 
 function mulll0_load_admin_page() {
-	list($status, $warnings) = mulll0_security_checks();
+	list($status, $warnings) = mulll0_setup_checks();
+	$warnings_html = implode("</li><li>", $warnings);
 	?>
-<h2><?php echo __("mulllhausen's secure links - admin panel", "mulll0_tr"); ?></h2>
-<h3>security checks</h3>
-<p>all the following features must be ticked for this plugin to work correctly. please click on any that are crossed and follow the instructions to fix them, then refresh this page.</p>
-<ul>
-	<li><?php echo implode("</li>\n\t<li>", $warnings); ?></li>
-</ul>
-<hr>
-<h3>shortcode usage</h3>
-<p>todo</p>
+<div class="mulll0-admin-page">
+	<h2><?php echo __("mulllhausen's secure links - admin panel", "mulll0_tr"); ?></h2>
+	<h3>security checks</h3>
+		<p><span class='mulll0-security-instructions' <?php if($status) echo "style='display:none;'"; ?> >please click on all of the checks that failed for instructions on how to fix them.</span></p>
+		<ul><li><?php echo $warnings_html; ?></li></ul>
+	<hr>
+	<h3>shortcode usage</h3>
+	<p>todo</p>
+</div>
 	<?php
 };
-function mulll0_security_checks() {
+function mulll0_setup_checks() {
 	$tick = "<img alt='tick' src='".plugins_url("images/tick.png", __FILE__)."' />";
 	$cross = "<img alt='cross' src='".plugins_url("images/cross.png", __FILE__)."' />";
 	$warnings = array(); //init
 	$status = true; //init. true = pass, false = fail
 
+	//if the restricted directory does not exist then attempt to create it. if this fails then issue a warning
+	global $uploads_dir;
+	$restricted_dir = trailingslashit($uploads_dir["path"])."restricted";
+	if(!file_exists("$restricted_dir/mulll0_test.txt")) {
+		$restricted_dir_exists = false;
+		if(!file_exists($restricted_dir)) {
+			mkdir($restricted_dir, 0775, true);
+			if(!file_exists($restricted_dir)) $warnings[] = "##fail##the restricted uploads directory <code>$restricted_dir</code> does not exist and could not be created. <div class='mulll-accordion-content'>to fix this error you will need to change the permissions of parent directory <code>".$uploads_dir["path"]."</code> to allow the webserver program to write to it. once you have fixed the permissions then simply refresh this page (there is no need to restart your webserver).</div>";
+			else $restricted_dir_exists = true;
+		} else $restricted_dir_exists = true;
+		if($restricted_dir_exists) {
+			file_put_contents("$restricted_dir/mulll0_test.txt", "the contents of this file should never be visible via the web");
+			if(!file_exists("$restricted_dir/mulll0_test.txt")) $warnings[] = "##fail##the restricted uploads directory <code>$restricted_dir</code> does exist, but an attempt to create file <code>mulll0_test.txt</code> inside this directory failed. <div class='mulll-accordion-content'>to fix this error you will need to change the permissions of the restricted uploads directory to allow the webserver program to write to it. once you have fixed the permissions then simply refresh this page (there is no need to restart your webserver).</div>";
+		};
+	} else $warnings[] = "##pass##test file <code>mulll0_test.txt</code> exists in the restricted directory <code>$restricted_dir</code>.";
+
 	//check that https is enabled
-	if(empty($_SERVER['HTTPS']) || strtolower($_SERVER['HTTPS']) == "off") $warnings[] = "$tick https is enabled";
-	else {
-		$warnings[] = "$cross a secure connection (https) is not in use. this means that all users of this website are open to man-in-th-middle attacks. anyone performing such an attack will be able to use session cookies to imitate users on this site and download their links. this plugin will still work without https but it is an extremely bad idea.";
+	if(empty($_SERVER['HTTPS']) || strtolower($_SERVER['HTTPS']) == "off") {
+		$warnings[] = "##fail##a secure connection (https) is not in use. this means that all users of this website are open to man-in-the-middle attacks. anyone performing such an attack will be able to use session cookies to imitate users on this site and download their links. <div class='mulll-accordion-content'>to fix this error you need to install a security certificate (also known as an ssl certificate) for your webserver. it should be possible to find an ssl certificate for free online, just try this <a href='http://google.com/#q=free+ssl+certificate' target='_blank'>google search</a>. once you have installed the certificate, restart your webserver program and refresh this page.</div>";
 		$status = false;
-	};
+	} else $warnings[] = "##pass##https is enabled.";
 
 	//check that mcrypt functions exist
-	if(extension_loaded("mcrypt")) $warnings[] = "$tick the mcrypt library is installed and can be used for encrypting and decrypting secure links";
+	if(extension_loaded("mcrypt")) $warnings[] = "##pass##the <code>mcrypt</code> library is installed and can be used for encrypting and decrypting secure links.";
 	else {
-		$warnings[] = "$cross the mcrypt library is not available. this plugin will not work without mcrypt.";
+		$warnings[] = "##fail##the <code>mcrypt</code> php extension is not available. this plugin will not work without <code>mcrypt</code>. <div class='mulll-accordion-content'>to fix this error you need to install the <code>mcrypt</code> php extension (or simply enable <code>mcrypt</code> for php if it is already installed) on the server running this website. there are too many possible combinations of server, operating system, php version and php setup that you may be using to list all solutions here, so it is recommended that you serch the web for a solution, or else refer it to your sysadmin to fix. remember to restart the server program after installing new php extensions or altering the php setup.</div>";
 		$status = false;
 	};
 
 	//check that the private key has been securely modified
 	$pk_warnings = array();
-	if(mulll0_private_key == "please change this") $pk_warnings[] = "it has not been changed from its default value";
-	if(strlen(mulll0_private_key) < 20) $pk_warnings[] = "it is less than 20 characters";
-	$symbols = "!@#$%^&*()~{};',\.";
-	if(!preg_match("/[$symbols]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any of the following symbols: $symbols";
-	if(!preg_match("/[A-Z]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any capital letters";
-	if(!preg_match("/[0-9]/", mulll0_private_key)) $pk_warnings[] = "it does not contain any numbers";
+	if(mulll0_private_key == "please change this") $pk_warnings[] = "has not been changed from its default value";
+	if(strlen(mulll0_private_key) < 20) $pk_warnings[] = "is less than 20 characters long";
+	$symbols = "!@#$%^&*()~{};',";
+	if(!preg_match("/[$symbols]/", mulll0_private_key)) $pk_warnings[] = "does not contain any of the following symbols: $symbols";
+	if(!preg_match("/[A-Z]/", mulll0_private_key)) $pk_warnings[] = "does not contain any capital letters";
+	if(!preg_match("/[0-9]/", mulll0_private_key)) $pk_warnings[] = "does not contain any numbers";
 	if(count($pk_warnings)) {
-		$warnings[] = "$cross the private key has the following errors: <ul class='mulll0-list'><li>".implode("</li><li>", $pk_warnings)."</li></ul>";
+		$warnings[] = "##fail##the private key has the following errors: <ul class='mulll0-list'><li>it ".implode("</li><li>it ", $pk_warnings)."</li></ul> <div class='mulll-accordion-content'>to fix this error, open file <code>".__FILE__."</code> on the server that is running this website and locate the line which reads <code>define(\"mulll0_private_key\", \"xyz\");</code>. update the value of <code>xyz</code> to something secure according to the above instructions. save the file and then refresh this admin panel page. there is no need to restart the server during this process.</div>";
 		$status = false;
-	} else $warnings[] = "$tick the private key has been securely updated";
+	} else $warnings[] = "##pass##the private key has been securely updated.";
 
 	//use javascript to check if the restricted files can be accessed via the web
-	//the javascript for this plugin will do this whenever the #key-security-status element exists on the page
-	$warnings[] = "<span id='key-security-status'></span>";
+	//the javascript for this plugin will do this whenever the #mulll-key-security-status element exists on the page
+	$warnings[] = "<span id='mulll-key-security-status'></span>";
 
+	foreach($warnings as &$w) {
+		$each_status = substr($w, 0, 8);
+		switch($each_status) {
+			case "##pass##":
+				$w = substr($w, 8);
+				$w = "$tick $w";
+				break;
+			case "##fail##":
+				$w = substr($w, 8);
+				$w = "<div class='mulll-accordion-expandable'>$cross $w</div>";
+				break;
+		};
+		$w = "<div class='mulll-accordion-header'>$w</div>";
+	};
 	return array($status, $warnings);
 };
 function mulll0_encrypt_download_link($shortcode_attrs, $basename = null) {
