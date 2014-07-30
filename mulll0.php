@@ -12,11 +12,6 @@ Author URI: https://github.com/mulllhausen
 //exit if accessed directly
 if(!defined('ABSPATH')) exit;
 
-//chose a new private key. must be at least 20 characters long and contain
-//at least 1 number, 1 symbol and 1 capital letter
-//define("mulll0_private_key", "please change this");
-define("mulll0_private_key", "please change thisDFG345$%^");
-
 //plugin globals
 $uploads_dir = wp_upload_dir();
 
@@ -33,8 +28,7 @@ function mulll0_include_js() {
 	global $uploads_dir;
 	$triangulation_data = array(
 		"restricted_url" => trailingslashit($uploads_dir["url"])."restricted/",
-		"plugin_url" => trailingslashit(plugins_url("", __FILE__)),
-		"test_file_exists" => file_exists(trailingslashit($uploads_dir["path"])."restricted/mulll0_test.txt") ? true : false
+		"plugin_url" => trailingslashit(plugins_url("", __FILE__))
 	);
 	wp_localize_script($handle, "mulll0_data", $triangulation_data);
 	wp_enqueue_script($handle);
@@ -47,17 +41,30 @@ function mulll0_add_admin() {
 add_action("admin_menu", "mulll0_add_admin");
 
 function mulll0_load_admin_page() {
+	global $uploads_dir;
 	list($status, $warnings) = mulll0_setup_checks();
 	$warnings_html = implode("</li><li>", $warnings);
 	?>
 <div class="mulll0-admin-page">
 	<h2><?php echo __("mulllhausen's secure links - admin panel", "mulll0_tr"); ?></h2>
-	<h3>security checks</h3>
-		<p><span class='mulll0-security-instructions' <?php if($status) echo "style='display:none;'"; ?> >please click on all of the checks that failed for instructions on how to fix them.</span></p>
-		<ul><li><?php echo $warnings_html; ?></li></ul>
+	<h3>setup &amp; security checks</h3>
+		<p><span class='mulll0-security-instructions' <?php if($status) echo "style='display:none;'";/*$status == true == pass*/ ?> >please click on all of the checks that failed for instructions on how to fix them. you will not be able to use this plugin until all the checks pass.</span></p>
+		<?php echo $warnings_html; ?>
 	<hr>
-	<h3>shortcode usage</h3>
-	<p>todo</p>
+	<h3>plugin usage</h3>
+	<p><code>[mulll0 allowed_users="alice anderson, bob brown,charlie clarke"]filename.pdf[/mulll0]</code></p>
+	<p></p>
+	<p>notes:
+		<ul class='mulll0-list'>
+			<li>usernames that contain the comma (<code>,</code>) symbol will not work.</li>
+			<li>make sure to type shortcodes in text mode to avoid unwanted html entering the shortcode text and breaking it.</li>
+			<li>this plugin only enables secure downloads for files placed in the <code><?php echo trailingslashit($uploads_dir["path"])."restricted"; ?></code> directory. you can use another plugin (eg ...) to upload files to this location directly through your web-browser.</li>
+			<li>file paths within the shortcode should not be included - only the file name (basename) is necessary.</li>
+			<li>usernames listed within the <code>allowed_users</code> attribute of the shortcode are case insensitive.</li>
+			<li>administrator level users are able to download all links by default.</li>
+			<li>only users with editing permissions or above have access to this shortcode.</li>
+		</ul>
+	</p>
 </div>
 	<?php
 };
@@ -69,9 +76,10 @@ function mulll0_setup_checks() {
 
 	//if the restricted directory does not exist then attempt to create it. if this fails then issue a warning
 	global $uploads_dir;
+	$restricted_dir_exists = false; //init
+	$test_file_exists = false; //init
 	$restricted_dir = trailingslashit($uploads_dir["path"])."restricted";
 	if(!file_exists("$restricted_dir/mulll0_test.txt")) {
-		$restricted_dir_exists = false;
 		if(!file_exists($restricted_dir)) {
 			mkdir($restricted_dir, 0775, true);
 			if(!file_exists($restricted_dir)) $warnings[] = "##fail##the restricted uploads directory <code>$restricted_dir</code> does not exist and could not be created. <div class='mulll-accordion-content'>to fix this error you will need to change the permissions of parent directory <code>".$uploads_dir["path"]."</code> to allow the webserver program to write to it. once you have fixed the permissions then simply refresh this page (there is no need to restart your webserver).</div>";
@@ -80,8 +88,12 @@ function mulll0_setup_checks() {
 		if($restricted_dir_exists) {
 			file_put_contents("$restricted_dir/mulll0_test.txt", "the contents of this file should never be visible via the web");
 			if(!file_exists("$restricted_dir/mulll0_test.txt")) $warnings[] = "##fail##the restricted uploads directory <code>$restricted_dir</code> does exist, but an attempt to create file <code>mulll0_test.txt</code> inside this directory failed. <div class='mulll-accordion-content'>to fix this error you will need to change the permissions of the restricted uploads directory to allow the webserver program to write to it. once you have fixed the permissions then simply refresh this page (there is no need to restart your webserver).</div>";
+			else $test_file_exists = true;
 		};
-	} else $warnings[] = "##pass##test file <code>mulll0_test.txt</code> exists in the restricted directory <code>$restricted_dir</code>.";
+	} else {
+		$warnings[] = "##pass##test file <code>mulll0_test.txt</code> exists in the restricted directory <code>$restricted_dir</code>.";
+		$test_file_exists = true;
+	};
 
 	//check that https is enabled
 	if(empty($_SERVER['HTTPS']) || strtolower($_SERVER['HTTPS']) == "off") {
@@ -98,20 +110,26 @@ function mulll0_setup_checks() {
 
 	//check that the private key has been securely modified
 	$pk_warnings = array();
-	if(mulll0_private_key == "please change this") $pk_warnings[] = "has not been changed from its default value";
-	if(strlen(mulll0_private_key) < 20) $pk_warnings[] = "is less than 20 characters long";
+	if(strlen(SECURE_AUTH_KEY) < 20) $pk_warnings[] = "it is less than 20 characters long";
 	$symbols = "!@#$%^&*()~{};',";
-	if(!preg_match("/[$symbols]/", mulll0_private_key)) $pk_warnings[] = "does not contain any of the following symbols: $symbols";
-	if(!preg_match("/[A-Z]/", mulll0_private_key)) $pk_warnings[] = "does not contain any capital letters";
-	if(!preg_match("/[0-9]/", mulll0_private_key)) $pk_warnings[] = "does not contain any numbers";
+	if(!preg_match("/[$symbols]/", SECURE_AUTH_KEY)) $pk_warnings[] = "it does not contain any of the following symbols: $symbols";
+	if(!preg_match("/[A-Z]/", SECURE_AUTH_KEY)) $pk_warnings[] = "it does not contain any capital letters";
+	if(!preg_match("/[0-9]/", SECURE_AUTH_KEY)) $pk_warnings[] = "does not contain any numbers";
 	if(count($pk_warnings)) {
-		$warnings[] = "##fail##the private key has the following errors: <ul class='mulll0-list'><li>it ".implode("</li><li>it ", $pk_warnings)."</li></ul> <div class='mulll-accordion-content'>to fix this error, open file <code>".__FILE__."</code> on the server that is running this website and locate the line which reads <code>define(\"mulll0_private_key\", \"xyz\");</code>. update the value of <code>xyz</code> to something secure according to the above instructions. save the file and then refresh this admin panel page. there is no need to restart the server during this process.</div>";
+		$warnings[] = "##fail##the private key has the following errors: <ul class='mulll0-list'><li>".implode("</li><li>", $pk_warnings)."</li></ul> <div class='mulll-accordion-content'>to fix this error, open file <code>".trailingslashit(ABSPATH)."wp-config.php</code> on the server that is running this website and locate the line which reads <code>define('SECURE_AUTH_KEY', 'xyz');</code>. update the value of <code>xyz</code> to something secure according to the above instructions. save the file and then refresh this admin panel page. there is no need to restart the server during this process.</div>";
 		$status = false;
 	} else $warnings[] = "##pass##the private key has been securely updated.";
 
 	//use javascript to check if the restricted files can be accessed via the web
-	//the javascript for this plugin will do this whenever the #mulll-key-security-status element exists on the page
-	$warnings[] = "<span id='mulll-key-security-status'></span>";
+	//the javascript for this plugin will run this check whenever a
+	//#mulll-key-security-status element exists on the page.
+	//we do not want to run this check if the test file does not exist on the
+	//server because in this case a javascript search for this file will return
+	//false - not because the restricted directory is secure, but because the
+	//file does not exist. therefore, do not run this javascript check on the
+	//security of the restricted dir since it will yield no useful results -
+	//only false positives.
+	if($test_file_exists) $warnings[] = "<span id='mulll-key-security-status'></span>";
 
 	foreach($warnings as &$w) {
 		$each_status = substr($w, 0, 8);
@@ -127,7 +145,7 @@ function mulll0_setup_checks() {
 		};
 		$w = "<div class='mulll-accordion-header'>$w</div>";
 	};
-	return array($status, $warnings);
+	return array($status, "<ul><li>$warnings_html</li></ul>");
 };
 function mulll0_encrypt_download_link($shortcode_attrs, $basename = null) {
 	global $current_user;
@@ -186,7 +204,7 @@ function mulll0_do_file_transfer($uid_and_file_str) {
 	readfile($file);
 };
 function mulll0_encrypt($plaintext) {
-	$key = pack("H*", hash("sha256", mulll0_private_key));
+	$key = pack("H*", hash("sha256", SECURE_AUTH_KEY));
 	$key_size = strlen($key);
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
@@ -198,7 +216,7 @@ function mulll0_decrypt($ciphertext) {
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 	$iv_dec = substr($ciphertext_dec, 0, $iv_size);
 	$ciphertext_dec = substr($ciphertext_dec, $iv_size);
-	$key = pack("H*", hash("sha256", mulll0_private_key));
+	$key = pack("H*", hash("sha256", SECURE_AUTH_KEY));
 	return mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $ciphertext_dec, MCRYPT_MODE_CBC, $iv_dec);
 };
 function mulll0_alert($string) {

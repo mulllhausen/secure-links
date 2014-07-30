@@ -20,17 +20,7 @@ jQuery(document).ready(function($) { //private scope, runs on dom-ready (ie befo
 	//only run a check for the private key if an element with id="mulll-key-security-status" exists on the page
 	if($("#mulll-key-security-status").length != 0) mulll0_key_security_status();
 	function mulll0_key_security_status() {
-		//firstly, if the test file does not exist on the server then a javascript
-		//search for this file will return false - not because the restricted
-		//directory is secure, but because the file does not exist. therefore,
-		//do not run this javascript check on the security of the restricted dir
-		//since it will yield no useful results - only false positives.
-		if(!mulll0_data["test_file_exists"]) {
-			$("#mulll-key-security-status").closest("li").remove();
-			return;
-		};
-		//at this point we know that the restricted test file does exist on the server
-		//so check if the restricted test file can be accessed
+		//check if the restricted test file can be accessed
 		var tick = "<img alt='tick' src='" + mulll0_data["plugin_url"] + "images/tick.png' />";
 		var cross = "<img alt='cross' src='" + mulll0_data["plugin_url"] + "images/cross.png' />";
 		$.ajax({
