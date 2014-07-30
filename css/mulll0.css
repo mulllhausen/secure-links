@@ -28,3 +28,14 @@ ul.mulll0-list {
 	margin: 0.5em;
 	padding: 0.5em;
 }
+.mulll0-shortcode-error {
+	display: none; /*initially hidden - maybe revealed by javascript later on*/
+}
+.mulll0-shortcode {
+	font-size: 80%;
+	font-weight: bold;
+}
+.mulll0-dud-link:hover {
+	cursor: pointer;
+	cursor: hand;
+}
