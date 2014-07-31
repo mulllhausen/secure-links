@@ -18,7 +18,8 @@ if(!defined('ABSPATH')) exit;
 
 //this is the url path that the user will see as they download a file. the path
 //doesn't actually exist - it is just used to identify downloads and make the
-//project look pretty
+//project look pretty. the value of this constant need not be the same as the
+//value of constant mulll0_secure_dir.
 define("mulll0_secure_uri", "myproject-secure-downloads");
 
 //this is the real directory that will be used to store the secure downloads.
