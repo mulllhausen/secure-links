@@ -29,7 +29,7 @@ ul.mulll0-list {
 	padding: 0.5em;
 }
 .mulll0-shortcode-error {
-	display: none; /*initially hidden - maybe revealed by javascript later on*/
+	color: red;
 }
 .mulll0-shortcode {
 	font-size: 80%;
