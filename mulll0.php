@@ -97,9 +97,9 @@ function mulll0_load_admin_page() {
 	<p>notes:
 		<ul class='mulll0-list'>
 			<li>usernames that contain the comma (<code>,</code>) symbol will not work, since the comma is used as a separator between usernames.</li>
-			<li>make sure to type shortcodes in text mode, not visual mode, to avoid unwanted html entering the shortcode text and breaking it.</li>
-			<li>this plugin only enables secure downloads for files placed in the <code><?php echo $secure_dir; ?></code> directory. if you like you can use another plugin (eg WP Easy Uploader) to upload files directly to this location directly through your web-browser.</li>
-			<li>file paths within the shortcode should not be included - only the file name (basename) is necessary.</li>
+			<li>make sure to type shortcodes in wordpress text-mode, not visual-mode, to avoid unwanted html entering the shortcode text and breaking it.</li>
+			<li>this plugin only enables secure downloads for files placed in the <code><?php echo $secure_dir; ?></code> directory. if you like you can use another plugin (eg <a href='https://wordpress.org/plugins/wp-easy-uploader/'>WP Easy Uploader</a>) to upload files directly to this location through your web-browser.</li>
+			<li>file paths should not be included within the shortcode - only the file name (basename) is necessary.</li>
 			<li>usernames listed within the <code>allowed_users</code> attribute of the shortcode are case insensitive.</li>
 			<li>administrator level users are able to download all links by default.</li>
 			<li>make sure not to upload files that have spaces at the start or end of the filename since this plugin strips whitespace from the filename specified in the shortcode.</li>
