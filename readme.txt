@@ -51,15 +51,15 @@ This will allow alice, bob and charlie to acces file `filename.pdf`. Each will h
 
 == Frequently Asked Questions ==
 
-= Can I change the secure downloads URL as it appears in the browser when I click on a link? =
+**Can I change the secure downloads URL as it appears in the browser when I click on a link?**
 
 Yes, you can do this by changing the value of constant `mulll0_secure_uri` at the top of file `wp-content/plugins/mulll-secure-links/mulll0.php`.
 
-= Can I change the real location of the secure downloads directory on the server? =
+**Can I change the real location of the secure downloads directory on the server?**
 
 Yes, you can do this by changing the value of constant `mulll0_secure_dir` at the top of file `wp-content/plugins/mulll-secure-links/mulll0.php`. The secure downloads directory is always located in the `wp-content/uploads/` directory. You can rename this directory at any time, just remember to copy all files from the old directory into this new directory. You will see a warning if you do not secure the new directory.
 
-= The plugin is claiming that the file I uploaded does not exist, even though I have uploaded it =
+**The plugin is claiming that the file I uploaded does not exist, even though I have uploaded it**
 
 You need to upload files to the secure directory as specified on the admin page.
 
@@ -74,6 +74,6 @@ You need to upload files to the secure directory as specified on the admin page.
 
 == Changelog ==
 
-= 1.0 =
+**1.0**
 
 * Initial release.
