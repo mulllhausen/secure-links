@@ -23,6 +23,7 @@ once you have securely configured everything then the following shortcode become
 this will allow alice, bob and charlie to acces file `filename.pdf`. each will have a different url link to the same file. but if any of them try to copy their url link and give it to denis then denis will not be able to access file `filename.pdf`.
 
  * usernames that contain the comma (`,`) symbol will not work, since the comma is used as a separator between usernames.
+ * full usernames must be used - partial usernames are not recognized. usernames can be found in the wordpress admin under "users > all users".
  * make sure to type shortcodes in wordpress text-mode, not visual-mode, to avoid unwanted html entering the shortcode text and breaking it.
  * this plugin only enables secure downloads for files placed in the secure-downloads directory. if you like you can use another plugin (eg [wp easy uploader](https://wordpress.org/plugins/wp-easy-uploader/)) to upload files directly to this location through your web-browser.
  * file paths should not be included within the shortcode - only the file name (basename) is necessary.
