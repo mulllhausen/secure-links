@@ -38,6 +38,7 @@ $secure_dir = trailingslashit(trailingslashit($uploads_dir["path"]).mulll0_secur
 $secure_url = trailingslashit(trailingslashit($uploads_dir["url"]).mulll0_secure_dir);
 $secure_downloads_pseudo_script = trailingslashit(mulll0_secure_uri);
 $plugin_url = trailingslashit(plugins_url("", __FILE__));
+$plugin_dir = trailingslashit(dirname(__FILE__));
 
 //
 // general functions to include css & js
@@ -70,8 +71,14 @@ add_action("wp_enqueue_scripts", "mulll0_include_css");
 //
 add_action("admin_enqueue_scripts", "mulll0_include_css");
 function mulll0_admin_include_js() {
-	global $secure_url, $plugin_url;
-	$admin_data = array("secure_url" => $secure_url, "plugin_url" => $plugin_url);
+	global $secure_url, $plugin_url, $plugin_dir;
+	//this array will become available to javascript
+	$admin_data = array(
+		"secure_url" => $secure_url,
+		"plugin_url" => $plugin_url,
+		"plugin_dir" => $plugin_dir,
+		"site_title" => get_bloginfo("name")
+	);
 	mulll0_include_js($admin_data);
 };
 add_action("admin_enqueue_scripts", "mulll0_admin_include_js");
