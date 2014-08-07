@@ -22,7 +22,7 @@ Once you have securely configured everything then the following shortcode become
 
 This will allow alice, bob and charlie to acces file `filename.pdf`. Each will have a different URL link to the same file. But if any of them try to copy their URL link and give it to denis then denis will not be able to access to file `filename.pdf`.
 
-**notes:**
+**Notes:**
 
  * Usernames that contain the comma (`,`) symbol will not work, since the comma is used as a separator between usernames.
  * Make sure to type shortcodes in wordpress text-mode, not visual-mode, to avoid unwanted html entering the shortcode text and breaking it.
@@ -49,7 +49,7 @@ This will allow alice, bob and charlie to acces file `filename.pdf`. Each will h
 
 == Frequently Asked Questions ==
 
-= Can I change the secure downloads URL as it appears in the browser when I clicks on a link? =
+= Can I change the secure downloads URL as it appears in the browser when I click on a link? =
 
 Yes, you can do this by changing the value of constant `mulll0_secure_uri` at the top of file `wp-content/plugins/mulll-secure-links/mulll0.php`.
 
