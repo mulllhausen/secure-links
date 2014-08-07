@@ -14,15 +14,17 @@ Gives you a new shortcode that makes download-links secure on a per-user basis.
 
 Mulllhausen's Secure Links lets you control the users who can download secure files from your site. Each user sees a different download URL, which is an encrypted combination of the user's ID and the file name. If one user copies their download URL and sends it to another user then this other user will not be able to access the secure file.
 
+**Initial Setup**
+
 When you first install this plugin you should go to the admin panel page (under the tools menu) and make sure that everything is securely configured.
+
+**Usage**
 
 Once you have securely configured everything then the following shortcode becomes available:
 
 `[mulll0 allowed_users="alice anderson,bob brown,charlie clarke"]filename.pdf[/mulll0]`
 
-This will allow alice, bob and charlie to acces file `filename.pdf`. Each will have a different URL link to the same file. But if any of them try to copy their URL link and give it to denis then denis will not be able to access to file `filename.pdf`.
-
-**Notes:**
+This will allow alice, bob and charlie to acces file `filename.pdf`. Each will have a different URL link to the same file. But if any of them try to copy their URL link and give it to denis then denis will not be able to access file `filename.pdf`.
 
  * Usernames that contain the comma (`,`) symbol will not work, since the comma is used as a separator between usernames.
  * Make sure to type shortcodes in wordpress text-mode, not visual-mode, to avoid unwanted html entering the shortcode text and breaking it.
